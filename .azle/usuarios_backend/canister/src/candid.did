@@ -1,7 +1,7 @@
 service: () -> {
-    createUser: (text, text, text, text) -> (record {id:principal; alias:text; nombre:text; segundoApellido:text; primerApellido:text});
-    deleteUser: (text) -> (variant {Ok:record {id:principal; alias:text; nombre:text; segundoApellido:text; primerApellido:text}; Err:variant {UserDoesNotExist:text}});
-    readUserById: (text) -> (opt record {id:principal; alias:text; nombre:text; segundoApellido:text; primerApellido:text}) query;
-    readUsers: () -> (vec record {id:principal; alias:text; nombre:text; segundoApellido:text; primerApellido:text}) query;
-    updateUser: (text, text, text, text, text) -> (variant {Ok:record {id:principal; alias:text; nombre:text; segundoApellido:text; primerApellido:text}; Err:variant {UserDoesNotExist:text}});
+    createMessage: (text, text, text, text) -> (record {id:principal; title:text; duration:text; start:text; typeMsg:text});
+    deletemessage: (text) -> (variant {Ok:record {id:principal; title:text; duration:text; start:text; typeMsg:text}; Err:variant {MessageDoesNotExist:text}});
+    readmessageById: (text) -> (opt record {id:principal; title:text; duration:text; start:text; typeMsg:text}) query;
+    readmessages: () -> (vec record {id:principal; title:text; duration:text; start:text; typeMsg:text}) query;
+    updatemessage: (text, text, text, text, text) -> (variant {Ok:record {id:principal; title:text; duration:text; start:text; typeMsg:text}; Err:variant {MessageDoesNotExist:text}});
 }

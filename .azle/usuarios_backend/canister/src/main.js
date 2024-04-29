@@ -100729,79 +100729,79 @@ var Principal4 = class _Principal {
     }
 };
 // src/usuarios_backend/src/index.ts
-var User = Record2({
+var Message = Record2({
     id: Principal3,
-    nombre: text,
-    primerApellido: text,
-    segundoApellido: text,
-    alias: text
+    title: text,
+    start: text,
+    duration: text,
+    typeMsg: text
 });
 var AplicationError = Variant2({
-    UserDoesNotExist: text
+    MessageDoesNotExist: text
 });
-var users = StableBTreeMap(0);
+var messages = StableBTreeMap(0);
 var src_default = Canister({
-    createUser: update([
+    createMessage: update([
         text,
         text,
         text,
         text
-    ], User, (nombre, primerApellido, segundoApellido, alias)=>{
+    ], Message, (title, start, typeMsg, duration)=>{
         const id2 = generateId();
-        const user = {
+        const message = {
             id: id2,
-            nombre,
-            primerApellido,
-            segundoApellido,
-            alias
+            title,
+            start,
+            duration,
+            typeMsg
         };
-        users.insert(user.id, user);
-        return user;
+        messages.insert(message.id, message);
+        return message;
     }),
-    readUsers: query([], Vec2(User), ()=>{
-        return users.values();
+    readmessages: query([], Vec2(Message), ()=>{
+        return messages.values();
     }),
-    readUserById: query([
+    readmessageById: query([
         text
-    ], Opt2(User), (id2)=>{
-        return users.get(Principal3.fromText(id2));
+    ], Opt2(Message), (id2)=>{
+        return messages.get(Principal3.fromText(id2));
     }),
-    deleteUser: update([
+    deletemessage: update([
         text
-    ], Result(User, AplicationError), (id2)=>{
-        const userOpt = users.get(Principal3.fromText(id2));
-        if ("None" in userOpt) {
+    ], Result(Message, AplicationError), (id2)=>{
+        const messageOpt = messages.get(Principal3.fromText(id2));
+        if ("None" in messageOpt) {
             return Err({
-                UserDoesNotExist: id2
+                MessageDoesNotExist: id2
             });
         }
-        const user = userOpt.Some;
-        users.remove(user.id);
-        return Ok(user);
+        const message = messageOpt.Some;
+        messages.remove(message.id);
+        return Ok(message);
     }),
-    updateUser: update([
+    updatemessage: update([
         text,
         text,
         text,
         text,
         text
-    ], Result(User, AplicationError), (userId, nombre, primerApellido, segundoApellido, alias)=>{
-        const userOpt = users.get(Principal3.fromText(userId));
-        if ("None" in userOpt) {
+    ], Result(Message, AplicationError), (messageId, title, start, typeMsg, duration)=>{
+        const messageOpt = messages.get(Principal3.fromText(messageId));
+        if ("None" in messageOpt) {
             return Err({
-                UserDoesNotExist: userId
+                MessageDoesNotExist: messageId
             });
         }
-        const newUser = {
-            id: Principal3.fromText(userId),
-            nombre,
-            primerApellido,
-            segundoApellido,
-            alias
+        const newmessage = {
+            id: Principal3.fromText(messageId),
+            title,
+            start,
+            typeMsg,
+            duration
         };
-        users.remove(Principal3.fromText(userId));
-        users.insert(Principal3.fromText(userId), newUser);
-        return Ok(newUser);
+        messages.remove(Principal3.fromText(messageId));
+        messages.insert(Principal3.fromText(messageId), newmessage);
+        return Ok(newmessage);
     })
 });
 function generateId() {

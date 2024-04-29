@@ -4,182 +4,243 @@ import Home from './Home'
 import Button from 'react-bootstrap/Button';
 import Modal from 'react-bootstrap/Modal';
 
-const Users = () => {
-  
-  const [usersBackend] = useCanister("usuarios_backend");
-  const {principal} = useConnect();
-  
-  const [users, setUsers] = useState([]);
-  const [loading, setLoading] = useState("");
-  const [idUser, setIdUser] = useState("");
-  const [alias, setAlias] = useState("");
+const Messages = () => {
 
+  const [messagesBackend] = useCanister("usuarios_backend");
+
+  const [messages, setMessages] = useState([]);
+  const [loading, setLoading] = useState("");
+  const [idMessage, setidMessage] = useState("");
+  const [typeMessage, settypeMessage] = useState("");
+
+  const [showModalCrear, setShowModalCrear] = useState(false);
   const [showModalEditar, setShowModalEditar] = useState(false);
   const [showModalEliminar, setShowModalEliminar] = useState(false);
 
-  const updateUser = async () => {
-    console.log('aui')
-    const form = document.getElementById("formEditar")
-    
-    const nombre = form.nombre.value;
-    const primerApellido = form.primerApellido.value;
-    const segundoApellido = form.segundoApellido.value;
-    const alias = form.alias.value;
+  //Create new message
+  const createMessage = async () => {
 
+    const title = document.getElementById("title").value;
+    const start = document.getElementById("start").value;
+    const duration = document.getElementById("duration").value;
+    const typeMsg = document.getElementById("typeMessage").value;
+    setLoading("Loading...");
+    await messagesBackend.createMessage(title, start, duration, typeMsg);
+    setLoading("");
+    setShowModalCrear(false);
+    obtieneMessages();
+
+  }
+
+  const handleShowModalCrear = async () => {
+    setShowModalCrear(true);
+  }
+
+  //update message
+
+
+  const updateMessage = async () => {
+    const title = document.getElementById("uptitle").value;
+    const start = document.getElementById("upstart").value;
+    const duration = document.getElementById("upduration").value;
+    const typeMsg = document.getElementById("upTypeMessage").value;  
     setLoading("Loading...");
 
-    await usersBackend.updateUser(idUser, nombre, primerApellido, segundoApellido, alias);
+    await messagesBackend.updatemessage(idMessage, title, start, duration, typeMsg);
     setLoading("");
-    setIdUser("")
-
+    setidMessage("")
     setShowModalEditar(false);
-    obtieneUsuarios();
+    obtieneMessages();
   }
 
-
-    
-  const handleShowModalEditar = async (idUsuario) => {
+  const handleShowModalEditar = async (idMessage) => {
     setShowModalEditar(true);
-    setIdUser(idUsuario)
-    
-    const usuario = await usersBackend.readUserById(idUsuario);
+    setidMessage(idMessage)
 
-    const form = document.getElementById("formEditar")
-    form.nombre.value = usuario[0].nombre
-    form.primerApellido.value = usuario[0].primerApellido
-    form.segundoApellido.value = usuario[0].segundoApellido
-    form.alias.value = usuario[0].alias
+    const message = await messagesBackend.readmessageById(idMessage);    
+    document.getElementById("uptitle").value= message[0].title;
+    document.getElementById("upstart").value = message[0].start;
+    document.getElementById("upduration").value = message[0].typeMsg;
+    document.getElementById("upTypeMessage").value = message[0].duration;
 
   }
 
-  const handleShowModalEliminar = async (idUsuario, alias) => {
+  const deleteMessage = async (e) => {
+    setLoading("Loading...");
+    await messagesBackend.deletemessage(idMessage);
+    setLoading("");
+    setidMessage("")
+    settypeMessage("")
+    setShowModalEliminar(false);
+
+    obtieneMessages()
+  }
+  const handleShowModalEliminar = async (idMessage, typeMessage) => {
     setShowModalEliminar(true);
-    setAlias(alias)
-    setIdUser(idUsuario)
-      
+    settypeMessage(typeMessage)
+    setidMessage(idMessage)
+
 
   }
 
+  const handleCloseModalCrear = () => setShowModalCrear(false);
   const handleCloseModalEditar = () => setShowModalEditar(false);
   const handleCloseModalEliminar = () => setShowModalEliminar(false);
 
   useEffect(() => {
-      obtieneUsuarios();
+    obtieneMessages();
   }, []);
 
- 
-  const obtieneUsuarios = async () => {
-      setLoading("Loading...");
-      try {
-        var usersRes = await usersBackend.readUsers();
-        setUsers(usersRes);   
-        // usersRes.forEach((user, index) => {
-        //   console.log("user" +user.nombre);
-        // });   
-        setLoading("");
 
-      } catch(e) {
-          console.log(e);
-          setLoading("Error happened fetching users list");
-      }
-
-  }
-
-  
-  
-  const deleteUser = async (e) => {
-
+  const obtieneMessages = async () => {
     setLoading("Loading...");
+    try {
+      var messagesRes = await messagesBackend.readmessages();
+      messagesRes.sort(
+        (msg1, msg2) => (msg1.start > msg2.start) ? 1 : (msg1.start < msg2.start) ? -1 : 0);
 
-    await usersBackend.deleteUser(idUser);
-    setLoading("");
-    setIdUser("")
-    setAlias("")
-    setShowModalEliminar(false);
-    
-    obtieneUsuarios()
+      setMessages(messagesRes);
+      setLoading("");
+
+    } catch (e) {
+      console.log(e);
+      setLoading("Error happened fetching messages list");
+    }
+
   }
-  
- 
-  return(
+
+
+
+
+  return (
     <>
-    { principal 
-      ? 
-      <div className="row  mt-5">
+
+      <div className="row mt-5" >
+        <div className="d-grid gap-2 d-md-flex justify-content-md-end mb-2">
+          <button type="button" className="btn btn-success" onClick={() => handleShowModalCrear()}>Crear Nuevo Mensaje</button>
+        </div>
         <div className="col">
-          {loading != "" 
-            ? 
-              <div className="alert alert-primary">{loading}</div>
+          {loading != ""
+            ?
+            <div className="alert alert-primary">{loading}</div>
             :
-              <div></div>
+            <div></div>
           }
           <div className="card">
             <div className="card-header">
-              Lista de usuarios
+              Lista de mensajes
+
             </div>
+
             <div className="card-body">
+
               <table className="table">
                 <thead>
                   <tr>
-                    <th>Nombre</th>
-                    <th>Primer apellido</th>
-                    <th>Segundo apellido</th>
-                    <th>Alias</th>
-                    <th colSpan="2">Opciones</th>
+                    <th>Hora inicial</th>
+                    <th>Título de Mensaje</th>
+                    <th>Duración</th>
+                    <th>Tipo Mensaje</th>
+                    <th colSpan="2">Opciones Mensaje</th>
                   </tr>
                 </thead>
                 <tbody id="tbody">
-                  {users.map((user) => {
+                  {messages.map((message) => {
                     return (
-                      <tr key={user.id}>
-                        <td>{user.nombre}</td>
-                        <td>{user.primerApellido}</td>
-                        <td>{user.segundoApellido}</td>
-                        <td>{user.alias}</td>
+                      <tr key={message.id}>
+                        <td>{message.start}</td>
+                        <td>{message.title}</td>
+                        <td>{message.typeMsg}</td>
+                        <td>{message.duration}</td>
                         <td>
-                          <button type="button" className="btn btn-primary" onClick={() => handleShowModalEditar(`${user.id}`)}>Editar</button>
+                          <button type="button" className="btn btn-primary" onClick={() => handleShowModalEditar(`${message.id}`)}>Editar</button>
                         </td>
                         <td>
-                          <button type="button" className="btn btn-danger" onClick={() => handleShowModalEliminar(`${user.id}`,user.alias)}>Eliminar</button>
+                          <button type="button" className="btn btn-danger" onClick={() => handleShowModalEliminar(`${message.id}`, `${message.start} - ${message.title}`)}>Eliminar</button>
                         </td>
                       </tr>
                     );
                   })}
                 </tbody>
-              </table>         
+              </table>
             </div>
           </div>
         </div>
-
-        <Modal show={showModalEditar} onHide={handleCloseModalEditar}>
+{/* Form to create messages*/}
+        <Modal show={showModalCrear} onHide={handleCloseModalCrear}>
           <Modal.Header closeButton>
-            <Modal.Title>Actualizar usuario</Modal.Title>
+            <Modal.Title>Crear nuevo Mensaje</Modal.Title>
           </Modal.Header>
           <Modal.Body>
             <div className="card">
               <div className="card-body">
-                {loading != "" 
-                  ? 
+                {loading != ""
+                  ?
                   <div className="alert alert-primary">{loading}</div>
                   :
                   <div></div>
                 }
-                <form style={{display:"inline"}} id="formEditar" >
+                <form style={{ display: "inline" }} id="formCrear" >
                   <div className="form-group">
-                      <label htmlFor="nombre" >Nombre usuario</label>
-                      <input type="text" className="form-control" id="nombre" placeholder="Juan" />
+                    <label htmlFor="title" >Título Mensaje</label>
+                    <input type="text" className="form-control" id="title" placeholder="Título mensaje" />
                   </div>
                   <div className="form-group">
-                      <label htmlFor="primerApellido" >Primer apellido</label>
-                      <input type="text" className="form-control" id="primerApellido" placeholder="Pérez" />
-                  </div>
-                      <div className="form-group">
-                      <label htmlFor="segundoApellido" >Segundo apellido</label>
-                      <input type="text" className="form-control" id="segundoApellido" placeholder="López" />
+                    <label htmlFor="start" >Hora inicial</label>
+                    <input type="text" className="form-control" id="start" placeholder="hh:mm" />
                   </div>
                   <div className="form-group">
-                      <label htmlFor="alias" >Alias</label>
-                      <input type="text" className="form-control" id="alias" placeholder="juanito" />
+                    <label htmlFor="duration" >Duración</label>
+                    <input type="text" className="form-control" id="duration" placeholder="40" />
+                  </div>
+                  <div className="form-group">
+                    <label htmlFor="typeMessage" >Tipo de Mensaje</label>
+                    <input type="text" className="form-control" id="typeMessage" placeholder="interno" />
+                  </div>
+                  <br />
+                </form>
+              </div>
+            </div>
+          </Modal.Body>
+          <Modal.Footer>
+            <Button variant="secondary" onClick={handleCloseModalCrear}>
+              Cerrar
+            </Button>
+            <Button variant="primary" onClick={createMessage}>
+              Guardar
+            </Button>
+          </Modal.Footer>
+        </Modal>
+{/* Form updating messages*/}
+        <Modal show={showModalEditar} onHide={handleCloseModalEditar}>
+          <Modal.Header closeButton>
+            <Modal.Title>Actualizar Mensaje</Modal.Title>
+          </Modal.Header>
+          <Modal.Body>
+            <div className="card">
+              <div className="card-body">
+                {loading != ""
+                  ?
+                  <div className="alert alert-primary">{loading}</div>
+                  :
+                  <div></div>
+                }
+                <form style={{ display: "inline" }} id="formEditar" >
+                  <div className="form-group">
+                    <label htmlFor="title" >Título Mensaje</label>
+                    <input type="text" className="form-control" id="uptitle" placeholder="Título del mensaje" />
+                  </div>
+                  <div className="form-group">
+                    <label htmlFor="start" >Hora inicial</label>
+                    <input type="text" className="form-control" id="upstart" placeholder="hh:mm" />
+                  </div>
+                  <div className="form-group">
+                    <label htmlFor="duration" >Duración</label>
+                    <input type="text" className="form-control" id="upduration" placeholder="40" />
+                  </div>
+                  <div className="form-group">
+                    <label htmlFor="typeMessage" >Tipo de Mensaje</label>
+                    <input type="text" className="form-control" id="upTypeMessage" placeholder="interno" />
                   </div>
                   <br />
                 </form>
@@ -190,26 +251,26 @@ const Users = () => {
             <Button variant="secondary" onClick={handleCloseModalEditar}>
               Cerrar
             </Button>
-            <Button variant="primary"  onClick={updateUser}>
+            <Button variant="primary" onClick={updateMessage}>
               Guardar
             </Button>
           </Modal.Footer>
         </Modal>
-
+{/* Form delete message */}
         <Modal show={showModalEliminar} onHide={handleCloseModalEliminar}>
           <Modal.Header closeButton>
-            <Modal.Title>Confirmación</Modal.Title>
+            <Modal.Title>Eliminar Mensaje</Modal.Title>
           </Modal.Header>
           <Modal.Body>
             <div className="card">
               <div className="card-body">
-                {loading != "" 
-                  ? 
+                {loading != ""
+                  ?
                   <div className="alert alert-primary">{loading}</div>
                   :
                   <div></div>
                 }
-                <p> Deseas eliminar el usuario con alias {alias}</p>
+                <p> ¿ Deseas eliminar  "{typeMessage}" de la lista?</p>
               </div>
             </div>
           </Modal.Body>
@@ -217,18 +278,16 @@ const Users = () => {
             <Button variant="secondary" onClick={handleCloseModalEliminar}>
               Cerrar
             </Button>
-            <Button variant="danger"  onClick={deleteUser}>
+            <Button variant="danger" onClick={deleteMessage}>
               Eliminar
             </Button>
           </Modal.Footer>
         </Modal>
       </div>
-    : 
-      <Home />
-    }
+
     </>
   )
 }
-  
-  
-export default Users
+
+
+export default Messages
